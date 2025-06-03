@@ -40,33 +40,10 @@ type ConfigurationKeysRegisteredSuite struct {
 	suite.Suite
 }
 
-// --- Helper to initialize a new ConfigImpl for tests ---
-func newTestConfigImpl() *ConfigImpl {
-	return &ConfigImpl{
-		RegString:  make(map[Variable[string]]string),
-		RegInt:     make(map[Variable[int]]int),
-		RegInt8:    make(map[Variable[int8]]int8),
-		RegInt16:   make(map[Variable[int16]]int16),
-		RegInt32:   make(map[Variable[int32]]int32),
-		RegInt64:   make(map[Variable[int64]]int64),
-		RegUint:    make(map[Variable[uint]]uint),
-		RegUint8:   make(map[Variable[uint8]]uint8),
-		RegUint16:  make(map[Variable[uint16]]uint16),
-		RegUint32:  make(map[Variable[uint32]]uint32),
-		RegUint64:  make(map[Variable[uint64]]uint64),
-		RegUintptr: make(map[Variable[uintptr]]uintptr),
-		RegBytes:   make(map[Variable[[]byte]][]byte),
-		RegRunes:   make(map[Variable[[]rune]][]rune),
-		RegFloat32: make(map[Variable[float32]]float32),
-		RegFloat64: make(map[Variable[float64]]float64),
-		RegBool:    make(map[Variable[bool]]bool),
-	}
-}
-
 // --- Setup Methods ---
 
 func (s *ConfigSuite) SetupTest() {
-	s.config = newTestConfigImpl()
+	s.config = NewConfigImpl()
 }
 
 // --- Test Methods for ConfigSuite ---
@@ -284,7 +261,7 @@ func (s *LoadEnvironmentSuite) unsetEnvVar(key string) {
 }
 
 func (s *LoadEnvironmentSuite) TestLoadString() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[string]("ENV_STR")
 	fallback := "fb_str"
 	envVal := "env_str_val"
@@ -300,14 +277,14 @@ func (s *LoadEnvironmentSuite) TestLoadString() {
 		assert.Equal(s.T(), fallback, cfg.RegString[key]) // This line would fail if cfg is not reset or key re-added
 
 		// Corrected approach for EnvVarNotSet
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegString[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadInt() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[int]("ENV_INT")
 	fallback := 100
 	envValStr := "200"
@@ -320,20 +297,20 @@ func (s *LoadEnvironmentSuite) TestLoadInt() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-an-int")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadInt8() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[int8]("ENV_INT8")
 	fallback := int8(10)
 	envValStr := "20"
@@ -346,26 +323,26 @@ func (s *LoadEnvironmentSuite) TestLoadInt8() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt8[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-an-int8")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt8[key])
 	})
 	s.Run("EnvVarSetOutOfBounds", func() {
 		s.setEnvVar(string(key), "129") // Out of bounds for int8
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt8[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadInt16() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[int16]("ENV_INT16")
 	fallback := int16(1000)
 	envValStr := "2000"
@@ -378,26 +355,26 @@ func (s *LoadEnvironmentSuite) TestLoadInt16() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt16[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-an-int16")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt16[key])
 	})
 	s.Run("EnvVarSetOutOfBounds", func() {
 		s.setEnvVar(string(key), "32768") // Out of bounds for int16
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt16[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadInt32() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[int32]("ENV_INT32")
 	fallback := int32(100000)
 	envValStr := "200000"
@@ -410,26 +387,26 @@ func (s *LoadEnvironmentSuite) TestLoadInt32() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt32[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-an-int32")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt32[key])
 	})
 	s.Run("EnvVarSetOutOfBounds", func() {
 		s.setEnvVar(string(key), "2147483648") // Out of bounds for int32
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt32[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadInt64() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[int64]("ENV_INT64")
 	fallback := int64(1000000000)
 	envValStr := "2000000000"
@@ -442,26 +419,26 @@ func (s *LoadEnvironmentSuite) TestLoadInt64() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt64[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-an-int64")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt64[key])
 	})
 	s.Run("EnvVarSetOutOfBounds", func() {
 		s.setEnvVar(string(key), "9223372036854775808") // Out of bounds for int64
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegInt64[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadUint() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[uint]("ENV_UINT")
 	fallback := uint(100)
 	envValStr := "200"
@@ -474,26 +451,26 @@ func (s *LoadEnvironmentSuite) TestLoadUint() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-a-uint")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint[key])
 	})
 	s.Run("EnvVarSetNegative", func() {
 		s.setEnvVar(string(key), "-1") // Negative, invalid for uint
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadUint8() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[uint8]("ENV_UINT8")
 	fallback := uint8(10)
 	envValStr := "20"
@@ -506,26 +483,26 @@ func (s *LoadEnvironmentSuite) TestLoadUint8() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint8[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-a-uint8")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint8[key])
 	})
 	s.Run("EnvVarSetOutOfBounds", func() {
 		s.setEnvVar(string(key), "256") // Out of bounds for uint8
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint8[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadUint16() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[uint16]("ENV_UINT16")
 	fallback := uint16(1000)
 	envValStr := "2000"
@@ -538,26 +515,26 @@ func (s *LoadEnvironmentSuite) TestLoadUint16() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint16[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-a-uint16")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint16[key])
 	})
 	s.Run("EnvVarSetOutOfBounds", func() {
 		s.setEnvVar(string(key), "65536") // Out of bounds for uint16
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint16[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadUint32() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[uint32]("ENV_UINT32")
 	fallback := uint32(100000)
 	envValStr := "200000"
@@ -570,26 +547,26 @@ func (s *LoadEnvironmentSuite) TestLoadUint32() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint32[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-a-uint32")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint32[key])
 	})
 	s.Run("EnvVarSetOutOfBounds", func() {
 		s.setEnvVar(string(key), "4294967296") // Out of bounds for uint32
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint32[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadUint64() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[uint64]("ENV_UINT64")
 	fallback := uint64(1000000000)
 	envValStr := "2000000000"
@@ -602,26 +579,26 @@ func (s *LoadEnvironmentSuite) TestLoadUint64() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint64[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-a-uint64")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint64[key])
 	})
 	s.Run("EnvVarSetOutOfBounds", func() {
 		s.setEnvVar(string(key), "18446744073709551616") // Out of bounds for uint64
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUint64[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadUintptr() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[uintptr]("ENV_UINTPTR")
 	fallback := uintptr(0x1000)
 	envValStr := "0x2000" // Using hex for variety
@@ -640,20 +617,20 @@ func (s *LoadEnvironmentSuite) TestLoadUintptr() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUintptr[key])
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-a-uintptr")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegUintptr[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadFloat32() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[float32]("ENV_FLOAT32")
 	fallback := float32(1.23)
 	envValStr := "4.56"
@@ -666,20 +643,20 @@ func (s *LoadEnvironmentSuite) TestLoadFloat32() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.InDelta(s.T(), fallback, freshCfg.RegFloat32[key], 0.0001)
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-a-float")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.InDelta(s.T(), fallback, freshCfg.RegFloat32[key], 0.0001)
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadFloat64() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[float64]("ENV_FLOAT64")
 	fallback := float64(1.23456)
 	envValStr := "7.89012"
@@ -692,13 +669,13 @@ func (s *LoadEnvironmentSuite) TestLoadFloat64() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.InDelta(s.T(), fallback, freshCfg.RegFloat64[key], 0.0000001)
 	})
 	s.Run("EnvVarSetInvalid", func() {
 		s.setEnvVar(string(key), "not-a-float64")
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.InDelta(s.T(), fallback, freshCfg.RegFloat64[key], 0.0000001)
 	})
@@ -727,7 +704,7 @@ func (s *LoadEnvironmentSuite) TestLoadBool() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			currentCfg := newTestConfigImpl()
+			currentCfg := NewConfigImpl()
 			if tc.envValue != nil {
 				s.setEnvVar(string(key), *tc.envValue)
 			} else {
@@ -740,7 +717,7 @@ func (s *LoadEnvironmentSuite) TestLoadBool() {
 }
 
 func (s *LoadEnvironmentSuite) TestLoadBytes() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[[]byte]("ENV_BYTES")
 	fallback := []byte("fb_bytes")
 	envVal := []byte("env_bytes_val")
@@ -752,14 +729,14 @@ func (s *LoadEnvironmentSuite) TestLoadBytes() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegBytes[key])
 	})
 }
 
 func (s *LoadEnvironmentSuite) TestLoadRunes() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 	key := Variable[[]rune]("ENV_RUNES")
 	fallback := []rune("fb_runes")
 	envValStr := "env_runes_😊"
@@ -772,7 +749,7 @@ func (s *LoadEnvironmentSuite) TestLoadRunes() {
 	})
 	s.Run("EnvVarNotSet", func() {
 		s.unsetEnvVar(string(key))
-		freshCfg := newTestConfigImpl()
+		freshCfg := NewConfigImpl()
 		LoadEnvironment(freshCfg, key, fallback)
 		assert.Equal(s.T(), fallback, freshCfg.RegRunes[key])
 	})
@@ -799,7 +776,7 @@ func (s *FormatKeysSuite) TestFormatKeys() {
 
 // --- Test Methods for CheckKeySuite ---
 func (s *CheckKeySuite) TestCheckKey() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 
 	strKey := Variable[string]("MY_STRING")
 	intKey := Variable[int]("MY_INT")
@@ -863,7 +840,7 @@ func (s *CheckKeySuite) TestCheckKey() {
 // --- Test Methods for ConfigurationKeysRegisteredSuite ---
 
 func (s *ConfigurationKeysRegisteredSuite) TestConfigurationKeysRegistered() {
-	cfg := newTestConfigImpl()
+	cfg := NewConfigImpl()
 
 	strKey1 := Variable[string]("STR_KEY_1")
 	strKey2Missing := Variable[string]("STR_KEY_2_MISSING")

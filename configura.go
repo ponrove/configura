@@ -98,6 +98,28 @@ type ConfigImpl struct {
 	RegBool    map[Variable[bool]]bool
 }
 
+func NewConfigImpl() *ConfigImpl {
+	return &ConfigImpl{
+		RegString:  make(map[Variable[string]]string),
+		RegInt:     make(map[Variable[int]]int),
+		RegInt8:    make(map[Variable[int8]]int8),
+		RegInt16:   make(map[Variable[int16]]int16),
+		RegInt32:   make(map[Variable[int32]]int32),
+		RegInt64:   make(map[Variable[int64]]int64),
+		RegUint:    make(map[Variable[uint]]uint),
+		RegUint8:   make(map[Variable[uint8]]uint8),
+		RegUint16:  make(map[Variable[uint16]]uint16),
+		RegUint32:  make(map[Variable[uint32]]uint32),
+		RegUint64:  make(map[Variable[uint64]]uint64),
+		RegUintptr: make(map[Variable[uintptr]]uintptr),
+		RegBytes:   make(map[Variable[[]byte]][]byte),
+		RegRunes:   make(map[Variable[[]rune]][]rune),
+		RegFloat32: make(map[Variable[float32]]float32),
+		RegFloat64: make(map[Variable[float64]]float64),
+		RegBool:    make(map[Variable[bool]]bool),
+	}
+}
+
 var _ Config = (*ConfigImpl)(nil)
 
 func (c ConfigImpl) String(key Variable[string]) string {
