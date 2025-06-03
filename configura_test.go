@@ -404,7 +404,7 @@ func (s *LoadEnvironmentSuite) TestLoadBool() {
 		{"EnvTFallbackF", func(s string) *string { return &s }("t"), false, true, true},
 		{"EnvFFallbackT", func(s string) *string { return &s }("f"), true, false, false},
 		{"EnvInvalidFallbackF", func(s string) *string { return &s }("invalid"), false, false, false}, // strconv.ParseBool("invalid") is (false, err)
-		{"EnvInvalidFallbackT", func(s string) *string { return &s }("invalid"), true, false, false},  // strconv.ParseBool("invalid") is (false, err)
+		{"EnvInvalidFallbackT", func(s string) *string { return &s }("invalid"), true, true, false},   // strconv.ParseBool("invalid") is (false, err)
 		{"EnvNotSetFallbackF", nil, false, false, false},
 		{"EnvNotSetFallbackT", nil, true, true, true},
 	}
@@ -419,20 +419,6 @@ func (s *LoadEnvironmentSuite) TestLoadBool() {
 			}
 			LoadEnvironment(cfg, key, tc.fallback)
 			assert.Equal(s.T(), tc.expectedReg, cfg.RegBool[key], "Mismatch in registered bool value")
-			// This part assumes a Bool helper function like:
-			// func Bool(key Variable[bool], fallback bool) bool {
-			//    valStr, exists := os.LookupEnv(string(key))
-			//    if !exists { return fallback }
-			//    b, err := strconv.ParseBool(valStr)
-			//    if err != nil { return false } // Or some other error handling for helper
-			//    return b
-			// }
-			// For this test, let's simulate the direct helper call more accurately based on LoadEnvironment's behavior
-			// LoadEnvironment uses: Bool(any(key).(Variable[bool]), any(fallback).(bool))
-			// So the tc.fallback is what the internal Bool helper receives.
-			// If env var exists & invalid, internal Bool helper will return false (from strconv.ParseBool error).
-			// If env var does not exist, internal Bool helper returns the tc.fallback.
-			// So tc.expectedReg should be the same as what direct Bool(key, tc.fallback) would yield.
 			assert.Equal(s.T(), tc.expectedReg, Bool(key, tc.fallback), "Mismatch from direct Bool helper call simulation")
 		})
 	}

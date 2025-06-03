@@ -12,13 +12,6 @@ func Bool(key Variable[bool], fallback bool) bool {
 		if vBool, err := strconv.ParseBool(vStr); err == nil {
 			return vBool
 		}
-		// If ParseBool fails, it returns false. Depending on desired behavior,
-		// you might want to return fallback here instead of the 'false' from ParseBool error.
-		// For this stub, let's assume if it's set but invalid, it's considered 'false'
-		// (which is strconv.ParseBool's behavior on error).
-		// If strict "return fallback on any error" is needed, this would change.
-		// The current LoadEnvironment structure implies the parsed value (or ParseBool's error value) is stored.
-		return false // What strconv.ParseBool returns on error
 	}
 	return fallback
 }

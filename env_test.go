@@ -90,7 +90,7 @@ func init() {
 	// Bytes
 	_ = os.Setenv("valid_bytes_1", "2")
 	_ = os.Setenv("valid_bytes_2", "testing")
-	_ = os.Setenv("invalid_bytes_1", "")
+	_ = os.Setenv("invalid_bytes_1", "foo")
 
 	// String
 	_ = os.Setenv("valid_string_1", "2")
@@ -100,7 +100,7 @@ func init() {
 	// Runes
 	_ = os.Setenv("valid_runes_1", "2")
 	_ = os.Setenv("valid_runes_2", "testing")
-	_ = os.Setenv("invalid_runes_1", "")
+	_ = os.Setenv("invalid_runes_1", "foo")
 
 	// Float32
 	_ = os.Setenv("valid_float32_1", "2")
