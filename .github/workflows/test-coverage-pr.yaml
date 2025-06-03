@@ -54,8 +54,6 @@ jobs:
             // 2. Prepare format of the comment
             const output = `## Golang Build & Test status 🚀
 
-            #### Go Build Outcome 🔨\`${{ steps.build.outcome }}\`
-
             #### Go Test Outcome 🧪\`${{ steps.test.outcome }}\`
 
             #### Coverage Report 📊\`${{ steps.coverage.outcome }}\`
