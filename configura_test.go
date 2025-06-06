@@ -40,6 +40,11 @@ type ConfigurationKeysRegisteredSuite struct {
 	suite.Suite
 }
 
+// FallbackSuite tests the Fallback function
+type FallbackSuite struct {
+	suite.Suite
+}
+
 // --- Setup Methods ---
 
 func (s *ConfigSuite) SetupTest() {
@@ -908,4 +913,98 @@ func TestConfiguraSuite(t *testing.T) {
 	suite.Run(t, new(FormatKeysSuite))
 	suite.Run(t, new(CheckKeySuite))
 	suite.Run(t, new(ConfigurationKeysRegisteredSuite))
+	suite.Run(t, new(FallbackSuite))
+}
+
+func (s *FallbackSuite) TestFallbackString() {
+	tests := []struct {
+		name     string
+		value    string
+		fallback string
+		expected string
+	}{
+		{
+			name:     "Value is not empty",
+			value:    "actualValue",
+			fallback: "fallbackValue",
+			expected: "actualValue",
+		},
+		{
+			name:     "Value is empty",
+			value:    "",
+			fallback: "fallbackValue",
+			expected: "fallbackValue",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			result := Fallback(tc.value, tc.fallback)
+			s.Equal(tc.expected, result)
+		})
+	}
+}
+
+func (s *FallbackSuite) TestFallbackInt() {
+	tests := []struct {
+		name     string
+		value    int
+		fallback int
+		expected int
+	}{
+		{
+			name:     "Value is not zero",
+			value:    10,
+			fallback: 20,
+			expected: 10,
+		},
+		{
+			name:     "Value is zero",
+			value:    0,
+			fallback: 20,
+			expected: 20,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			result := Fallback(tc.value, tc.fallback)
+			s.Equal(tc.expected, result)
+		})
+	}
+}
+
+func (s *FallbackSuite) TestFallbackBool() {
+	tests := []struct {
+		name     string
+		value    bool
+		fallback bool
+		expected bool
+	}{
+		{
+			name:     "Value is true",
+			value:    true,
+			fallback: false,
+			expected: true,
+		},
+		{
+			name:     "Value is false, fallback true",
+			value:    false,
+			fallback: true,
+			expected: true,
+		},
+		{
+			name:     "Value is false, fallback false",
+			value:    false,
+			fallback: false,
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			result := Fallback(tc.value, tc.fallback)
+			s.Equal(tc.expected, result)
+		})
+	}
 }

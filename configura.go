@@ -351,3 +351,13 @@ func (c ConfigImpl) ConfigurationKeysRegistered(keys ...any) error {
 
 	return nil
 }
+
+// Fallback is a helper function that returns the fallback value if the provided value is empty.
+// Only works on comparable types, which includes basic types like int, string, bool, etc.
+func Fallback[T comparable](value T, fallback T) T {
+	var emptyValue T
+	if value == emptyValue {
+		return fallback
+	}
+	return value
+}
