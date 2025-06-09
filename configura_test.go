@@ -1015,7 +1015,7 @@ func (s *MergeSuite) TestMergeTwoOverride() {
 
 	s.Equal("overridden_value", mergedCfg.String(keyStr)) // Overridden
 	s.Equal(111, mergedCfg.Int(keyInt))                   // From cfg1
-	s.True(mergedCfg.Bool(keyBool))                     // From cfg2
+	s.True(mergedCfg.Bool(keyBool))                       // From cfg2
 
 	cfgImpl, ok := mergedCfg.(*ConfigImpl)
 	s.Require().True(ok, "Merged config should be of type *ConfigImpl")
@@ -1037,12 +1037,12 @@ func (s *MergeSuite) TestMergeMultiple() {
 
 	cfg2 := NewConfigImpl()
 	keyInt1 := Variable[int]("I1")
-	LoadEnvironment(cfg2, keyInt1, 222)            // In cfg2
+	LoadEnvironment(cfg2, keyInt1, 222)             // In cfg2
 	LoadEnvironment(cfg2, keyShared, "shared_cfg2") // Override from cfg1
 
 	cfg3 := NewConfigImpl()
 	keyBool1 := Variable[bool]("B1")
-	LoadEnvironment(cfg3, keyBool1, true)          // In cfg3
+	LoadEnvironment(cfg3, keyBool1, true)           // In cfg3
 	LoadEnvironment(cfg3, keyShared, "shared_cfg3") // Override from cfg2
 
 	mergedCfg := Merge(cfg1, cfg2, cfg3)
@@ -1118,9 +1118,9 @@ func (s *MergeSuite) TestMergeAllTypes() {
 	LoadEnvironment(cfg1, kBool, vBool1) // Will be overridden
 
 	// Load into cfg2 (these will override cfg1 or be new)
-	LoadEnvironment(cfg2, kStr, vStr2) // Override
-	LoadEnvironment(cfg2, kInt, vInt2) // Override
-	LoadEnvironment(cfg2, kInt8, vInt8_2) // Override
+	LoadEnvironment(cfg2, kStr, vStr2)      // Override
+	LoadEnvironment(cfg2, kInt, vInt2)      // Override
+	LoadEnvironment(cfg2, kInt8, vInt8_2)   // Override
 	LoadEnvironment(cfg2, kInt16, vInt16_2) // Override
 	LoadEnvironment(cfg2, kInt32, vInt32_2) // Override
 	LoadEnvironment(cfg2, kInt64, vInt64_2) // Override
