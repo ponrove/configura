@@ -45,6 +45,11 @@ type FallbackSuite struct {
 	suite.Suite
 }
 
+// MergeSuite tests the Merge function.
+type MergeSuite struct {
+	suite.Suite
+}
+
 // --- Setup Methods ---
 
 func (s *ConfigSuite) SetupTest() {
@@ -914,6 +919,263 @@ func TestConfiguraSuite(t *testing.T) {
 	suite.Run(t, new(CheckKeySuite))
 	suite.Run(t, new(ConfigurationKeysRegisteredSuite))
 	suite.Run(t, new(FallbackSuite))
+	suite.Run(t, new(MergeSuite))
+}
+
+// TestMergeEmpty tests merging an empty list of configs.
+func (s *MergeSuite) TestMergeEmpty() {
+	mergedCfg := Merge()
+	s.Require().NotNil(mergedCfg, "Merged config should not be nil")
+
+	cfgImpl, ok := mergedCfg.(*ConfigImpl)
+	s.Require().True(ok, "Merged config should be of type *ConfigImpl")
+
+	s.Empty(cfgImpl.RegString, "RegString should be empty")
+	s.Empty(cfgImpl.RegInt, "RegInt should be empty")
+	s.Empty(cfgImpl.RegInt8, "RegInt8 should be empty")
+	s.Empty(cfgImpl.RegInt16, "RegInt16 should be empty")
+	s.Empty(cfgImpl.RegInt32, "RegInt32 should be empty")
+	s.Empty(cfgImpl.RegInt64, "RegInt64 should be empty")
+	s.Empty(cfgImpl.RegUint, "RegUint should be empty")
+	s.Empty(cfgImpl.RegUint8, "RegUint8 should be empty")
+	s.Empty(cfgImpl.RegUint16, "RegUint16 should be empty")
+	s.Empty(cfgImpl.RegUint32, "RegUint32 should be empty")
+	s.Empty(cfgImpl.RegUint64, "RegUint64 should be empty")
+	s.Empty(cfgImpl.RegUintptr, "RegUintptr should be empty")
+	s.Empty(cfgImpl.RegBytes, "RegBytes should be empty")
+	s.Empty(cfgImpl.RegRunes, "RegRunes should be empty")
+	s.Empty(cfgImpl.RegFloat32, "RegFloat32 should be empty")
+	s.Empty(cfgImpl.RegFloat64, "RegFloat64 should be empty")
+	s.Empty(cfgImpl.RegBool, "RegBool should be empty")
+}
+
+// TestMergeSingle tests merging a single configuration.
+func (s *MergeSuite) TestMergeSingle() {
+	cfg1 := NewConfigImpl()
+	keyStr := Variable[string]("TEST_STR")
+	LoadEnvironment(cfg1, keyStr, "value1")
+
+	keyInt := Variable[int]("TEST_INT")
+	LoadEnvironment(cfg1, keyInt, 123)
+
+	mergedCfg := Merge(cfg1)
+	s.Require().NotNil(mergedCfg, "Merged config should not be nil")
+
+	s.Equal("value1", mergedCfg.String(keyStr))
+	s.Equal(123, mergedCfg.Int(keyInt))
+
+	// Ensure it has copied values correctly
+	cfgImpl, ok := mergedCfg.(*ConfigImpl)
+	s.Require().True(ok, "Merged config should be of type *ConfigImpl")
+	s.Equal("value1", cfgImpl.RegString[keyStr])
+	s.Equal(123, cfgImpl.RegInt[keyInt])
+	s.Len(cfgImpl.RegString, 1)
+	s.Len(cfgImpl.RegInt, 1)
+}
+
+// TestMergeTwoDistinct tests merging two configurations with distinct keys.
+func (s *MergeSuite) TestMergeTwoDistinct() {
+	cfg1 := NewConfigImpl()
+	keyStr1 := Variable[string]("STR_KEY_1")
+	LoadEnvironment(cfg1, keyStr1, "value1")
+
+	cfg2 := NewConfigImpl()
+	keyInt1 := Variable[int]("INT_KEY_1")
+	LoadEnvironment(cfg2, keyInt1, 100)
+
+	mergedCfg := Merge(cfg1, cfg2)
+	s.Require().NotNil(mergedCfg, "Merged config should not be nil")
+
+	s.Equal("value1", mergedCfg.String(keyStr1))
+	s.Equal(100, mergedCfg.Int(keyInt1))
+
+	cfgImpl, ok := mergedCfg.(*ConfigImpl)
+	s.Require().True(ok, "Merged config should be of type *ConfigImpl")
+	s.Len(cfgImpl.RegString, 1, "RegString should have 1 entry")
+	s.Equal("value1", cfgImpl.RegString[keyStr1])
+	s.Len(cfgImpl.RegInt, 1, "RegInt should have 1 entry")
+	s.Equal(100, cfgImpl.RegInt[keyInt1])
+}
+
+// TestMergeTwoOverride tests merging two configurations where the second overrides the first.
+func (s *MergeSuite) TestMergeTwoOverride() {
+	cfg1 := NewConfigImpl()
+	keyStr := Variable[string]("OVERRIDE_STR")
+	LoadEnvironment(cfg1, keyStr, "original_value")
+	keyInt := Variable[int]("SHARED_INT")
+	LoadEnvironment(cfg1, keyInt, 111) // This key is only in cfg1
+
+	cfg2 := NewConfigImpl()
+	LoadEnvironment(cfg2, keyStr, "overridden_value") // Override
+	keyBool := Variable[bool]("NEW_BOOL")
+	LoadEnvironment(cfg2, keyBool, true) // This key is only in cfg2
+
+	mergedCfg := Merge(cfg1, cfg2)
+	s.Require().NotNil(mergedCfg, "Merged config should not be nil")
+
+	s.Equal("overridden_value", mergedCfg.String(keyStr)) // Overridden
+	s.Equal(111, mergedCfg.Int(keyInt))                   // From cfg1
+	s.True(mergedCfg.Bool(keyBool))                     // From cfg2
+
+	cfgImpl, ok := mergedCfg.(*ConfigImpl)
+	s.Require().True(ok, "Merged config should be of type *ConfigImpl")
+	s.Len(cfgImpl.RegString, 1)
+	s.Equal("overridden_value", cfgImpl.RegString[keyStr])
+	s.Len(cfgImpl.RegInt, 1)
+	s.Equal(111, cfgImpl.RegInt[keyInt])
+	s.Len(cfgImpl.RegBool, 1)
+	s.True(cfgImpl.RegBool[keyBool])
+}
+
+// TestMergeMultiple tests merging multiple (three) configurations with overrides.
+func (s *MergeSuite) TestMergeMultiple() {
+	cfg1 := NewConfigImpl()
+	keyStr1 := Variable[string]("S1")
+	LoadEnvironment(cfg1, keyStr1, "val_s1_cfg1") // In cfg1
+	keyShared := Variable[string]("SHARED_KEY")
+	LoadEnvironment(cfg1, keyShared, "shared_cfg1") // In cfg1, overridden by cfg2, then by cfg3
+
+	cfg2 := NewConfigImpl()
+	keyInt1 := Variable[int]("I1")
+	LoadEnvironment(cfg2, keyInt1, 222)            // In cfg2
+	LoadEnvironment(cfg2, keyShared, "shared_cfg2") // Override from cfg1
+
+	cfg3 := NewConfigImpl()
+	keyBool1 := Variable[bool]("B1")
+	LoadEnvironment(cfg3, keyBool1, true)          // In cfg3
+	LoadEnvironment(cfg3, keyShared, "shared_cfg3") // Override from cfg2
+
+	mergedCfg := Merge(cfg1, cfg2, cfg3)
+	s.Require().NotNil(mergedCfg)
+
+	s.Equal("val_s1_cfg1", mergedCfg.String(keyStr1))
+	s.Equal("shared_cfg3", mergedCfg.String(keyShared)) // Final override from cfg3
+	s.Equal(222, mergedCfg.Int(keyInt1))
+	s.True(mergedCfg.Bool(keyBool1))
+
+	cfgImpl, ok := mergedCfg.(*ConfigImpl)
+	s.Require().True(ok)
+	s.Len(cfgImpl.RegString, 2) // S1, SHARED_KEY
+	s.Len(cfgImpl.RegInt, 1)    // I1
+	s.Len(cfgImpl.RegBool, 1)   // B1
+}
+
+// TestMergeAllTypes ensures all supported types are merged correctly.
+func (s *MergeSuite) TestMergeAllTypes() {
+	cfg1 := NewConfigImpl()
+	cfg2 := NewConfigImpl()
+
+	// Define keys and values
+	kStr := Variable[string]("TYPE_STR")
+	vStr1, vStr2 := "string_val1", "string_val2"
+	kInt := Variable[int]("TYPE_INT")
+	vInt1, vInt2 := 10, 20
+	kInt8 := Variable[int8]("TYPE_INT8")
+	vInt8_1, vInt8_2 := int8(1), int8(2)
+	kInt16 := Variable[int16]("TYPE_INT16")
+	vInt16_1, vInt16_2 := int16(100), int16(200)
+	kInt32 := Variable[int32]("TYPE_INT32")
+	vInt32_1, vInt32_2 := int32(1000), int32(2000)
+	kInt64 := Variable[int64]("TYPE_INT64")
+	vInt64_1, vInt64_2 := int64(10000), int64(20000)
+	kUint := Variable[uint]("TYPE_UINT")
+	vUint1 := uint(1)
+	kUint8 := Variable[uint8]("TYPE_UINT8")
+	vUint8_1 := uint8(10)
+	kUint16 := Variable[uint16]("TYPE_UINT16")
+	vUint16_1 := uint16(100)
+	kUint32 := Variable[uint32]("TYPE_UINT32")
+	vUint32_1 := uint32(1000)
+	kUint64 := Variable[uint64]("TYPE_UINT64")
+	vUint64_1 := uint64(10000)
+	kUintptr := Variable[uintptr]("TYPE_UINTPTR")
+	vUintptr1 := uintptr(0x1)
+	kBytes := Variable[[]byte]("TYPE_BYTES")
+	vBytes2 := []byte("bytes2")
+	kRunes := Variable[[]rune]("TYPE_RUNES")
+	vRunes2 := []rune("runes2")
+	kFloat32 := Variable[float32]("TYPE_FLOAT32")
+	vFloat32_2 := float32(2.5)
+	kFloat64 := Variable[float64]("TYPE_FLOAT64")
+	vFloat64_2 := 20.5
+	kBool := Variable[bool]("TYPE_BOOL")
+	vBool1, vBool2 := false, true // Bool1 is in cfg1, Bool2 will override
+
+	// Load into cfg1 (these will be overridden or kept if not in cfg2)
+	LoadEnvironment(cfg1, kStr, vStr1)
+	LoadEnvironment(cfg1, kInt, vInt1)
+	LoadEnvironment(cfg1, kInt8, vInt8_1)
+	LoadEnvironment(cfg1, kInt16, vInt16_1)
+	LoadEnvironment(cfg1, kInt32, vInt32_1)
+	LoadEnvironment(cfg1, kInt64, vInt64_1)
+	// Uint types only in cfg1
+	LoadEnvironment(cfg1, kUint, vUint1)
+	LoadEnvironment(cfg1, kUint8, vUint8_1)
+	LoadEnvironment(cfg1, kUint16, vUint16_1)
+	LoadEnvironment(cfg1, kUint32, vUint32_1)
+	LoadEnvironment(cfg1, kUint64, vUint64_1)
+	LoadEnvironment(cfg1, kUintptr, vUintptr1)
+	LoadEnvironment(cfg1, kBool, vBool1) // Will be overridden
+
+	// Load into cfg2 (these will override cfg1 or be new)
+	LoadEnvironment(cfg2, kStr, vStr2) // Override
+	LoadEnvironment(cfg2, kInt, vInt2) // Override
+	LoadEnvironment(cfg2, kInt8, vInt8_2) // Override
+	LoadEnvironment(cfg2, kInt16, vInt16_2) // Override
+	LoadEnvironment(cfg2, kInt32, vInt32_2) // Override
+	LoadEnvironment(cfg2, kInt64, vInt64_2) // Override
+	// Slice and float types only in cfg2
+	LoadEnvironment(cfg2, kBytes, vBytes2)
+	LoadEnvironment(cfg2, kRunes, vRunes2)
+	LoadEnvironment(cfg2, kFloat32, vFloat32_2)
+	LoadEnvironment(cfg2, kFloat64, vFloat64_2)
+	LoadEnvironment(cfg2, kBool, vBool2) // Override
+
+	mergedCfg := Merge(cfg1, cfg2)
+	s.Require().NotNil(mergedCfg)
+
+	// Assertions for overridden values (from cfg2)
+	s.Equal(vStr2, mergedCfg.String(kStr))
+	s.Equal(vInt2, mergedCfg.Int(kInt))
+	s.Equal(vInt8_2, mergedCfg.Int8(kInt8))
+	s.Equal(vInt16_2, mergedCfg.Int16(kInt16))
+	s.Equal(vInt32_2, mergedCfg.Int32(kInt32))
+	s.Equal(vInt64_2, mergedCfg.Int64(kInt64))
+	s.Equal(vBool2, mergedCfg.Bool(kBool))
+
+	// Assertions for values only in cfg1
+	s.Equal(vUint1, mergedCfg.Uint(kUint))
+	s.Equal(vUint8_1, mergedCfg.Uint8(kUint8))
+	s.Equal(vUint16_1, mergedCfg.Uint16(kUint16))
+	s.Equal(vUint32_1, mergedCfg.Uint32(kUint32))
+	s.Equal(vUint64_1, mergedCfg.Uint64(kUint64))
+	s.Equal(vUintptr1, mergedCfg.Uintptr(kUintptr))
+
+	// Assertions for values only in cfg2
+	s.Equal(vBytes2, mergedCfg.Bytes(kBytes))
+	s.Equal(vRunes2, mergedCfg.Runes(kRunes))
+	s.Equal(vFloat32_2, mergedCfg.Float32(kFloat32))
+	s.Equal(vFloat64_2, mergedCfg.Float64(kFloat64))
+
+	cfgImpl, ok := mergedCfg.(*ConfigImpl)
+	s.Require().True(ok)
+	s.Len(cfgImpl.RegString, 1)
+	s.Len(cfgImpl.RegInt, 1)
+	s.Len(cfgImpl.RegInt8, 1)
+	s.Len(cfgImpl.RegInt16, 1)
+	s.Len(cfgImpl.RegInt32, 1)
+	s.Len(cfgImpl.RegInt64, 1)
+	s.Len(cfgImpl.RegUint, 1)
+	s.Len(cfgImpl.RegUint8, 1)
+	s.Len(cfgImpl.RegUint16, 1)
+	s.Len(cfgImpl.RegUint32, 1)
+	s.Len(cfgImpl.RegUint64, 1)
+	s.Len(cfgImpl.RegUintptr, 1)
+	s.Len(cfgImpl.RegBytes, 1)
+	s.Len(cfgImpl.RegRunes, 1)
+	s.Len(cfgImpl.RegFloat32, 1)
+	s.Len(cfgImpl.RegFloat64, 1)
+	s.Len(cfgImpl.RegBool, 1)
 }
 
 func (s *FallbackSuite) TestFallbackString() {

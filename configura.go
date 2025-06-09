@@ -2,6 +2,7 @@ package configura
 
 import (
 	"errors"
+	"maps"
 )
 
 var ErrMissingVariable = errors.New("missing configuration variables")
@@ -360,4 +361,34 @@ func Fallback[T comparable](value T, fallback T) T {
 		return fallback
 	}
 	return value
+}
+
+// Merge combines multiple Config instances into a single Config instance.
+func Merge(cfgs ...Config) Config {
+	merged := NewConfigImpl()
+
+	for _, cfg := range cfgs {
+		if strMap, ok := cfg.(*ConfigImpl); ok {
+			maps.Copy(merged.RegString, strMap.RegString)
+			maps.Copy(merged.RegInt, strMap.RegInt)
+			maps.Copy(merged.RegInt8, strMap.RegInt8)
+			maps.Copy(merged.RegInt16, strMap.RegInt16)
+			maps.Copy(merged.RegInt32, strMap.RegInt32)
+			maps.Copy(merged.RegInt64, strMap.RegInt64)
+			maps.Copy(merged.RegUint, strMap.RegUint)
+			maps.Copy(merged.RegUint8, strMap.RegUint8)
+			maps.Copy(merged.RegUint16, strMap.RegUint16)
+			maps.Copy(merged.RegUint32, strMap.RegUint32)
+			maps.Copy(merged.RegUint64, strMap.RegUint64)
+			maps.Copy(merged.RegUintptr, strMap.RegUintptr)
+			maps.Copy(merged.RegBytes, strMap.RegBytes)
+			maps.Copy(merged.RegRunes, strMap.RegRunes)
+			maps.Copy(merged.RegFloat32, strMap.RegFloat32)
+			maps.Copy(merged.RegFloat64, strMap.RegFloat64)
+			maps.Copy(merged.RegBool, strMap.RegBool)
+		} else {
+			panic("unsupported config type")
+		}
+	}
+	return merged
 }
